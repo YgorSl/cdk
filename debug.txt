@@ -1,0 +1,84 @@
+[root@srv-blkcstdes01 docker-autocompose]# docker logs el-1-geth-lighthouse--5a5d0964472540c28c30e27eaf73a6bd | grep -E "execution|auth|JWT|consensus"
+INFO [10-15|19:04:51.528] Maximum peer count                       ETH=50 total=50
+INFO [10-15|19:04:51.538] Smartcard socket not found, disabling    err="stat /run/pcscd/pcscd.comm: no such file or directory"
+INFO [10-15|19:04:51.560] Set global gas cap                       cap=50,000,000
+INFO [10-15|19:04:51.568] Initializing the KZG library             backend=gokzg
+INFO [10-15|19:04:51.571] Defaulting to pebble as the backing database
+INFO [10-15|19:04:51.571] Allocated cache and file handles         database=/data/geth/execution-data/geth/chaindata cache=512.00MiB handles=536,870,908
+INFO [10-15|19:04:52.158] Opened ancient database                  database=/data/geth/execution-data/geth/chaindata/ancient/chain readonly=false
+INFO [10-15|19:04:52.158] Opened Era store                         datadir=/data/geth/execution-data/geth/chaindata/ancient/chain/era
+INFO [10-15|19:04:52.159] State scheme set by user                 scheme=hash
+INFO [10-15|19:04:52.159] Writing custom genesis block
+WARN [10-15|19:04:52.162] Head block is not reachable
+INFO [10-15|19:04:52.197] Persisted trie from memory database      nodes=435 size=61.00KiB time=11.43321ms gcnodes=0 gcsize=0.00B gctime=0s livenodes=0 livesize=0.00B
+INFO [10-15|19:04:52.200] Successfully wrote genesis state         database=chaindata hash=8ba857..4bcb74
+{"t":"2025-10-15T19:04:52.292576657Z","lvl":"info","msg":"Maximum peer count","ETH":50,"total":50}
+{"t":"2025-10-15T19:04:52.294161819Z","lvl":"info","msg":"Smartcard socket not found, disabling","err":"stat /run/pcscd/pcscd.comm: no such file or directory"}
+{"t":"2025-10-15T19:04:52.294529533Z","lvl":"warn","msg":"Option --allow-insecure-unlock is deprecated and has no effect"}
+{"t":"2025-10-15T19:04:52.297383762Z","lvl":"info","msg":"Enabling recording of key preimages since archive mode is used"}
+{"t":"2025-10-15T19:04:52.297552484Z","lvl":"warn","msg":"Disabled transaction unindexing for archive node"}
+{"t":"2025-10-15T19:04:52.298252478Z","lvl":"info","msg":"Set global gas cap","cap":50000000}
+{"t":"2025-10-15T19:04:52.298830068Z","lvl":"info","msg":"Initializing the KZG library","backend":"gokzg"}
+{"t":"2025-10-15T19:04:52.302317705Z","lvl":"info","msg":"Enabling metrics collection"}
+{"t":"2025-10-15T19:04:52.302383726Z","lvl":"info","msg":"Enabling stand-alone metrics HTTP endpoint","address":"0.0.0.0:9001"}
+{"t":"2025-10-15T19:04:52.302433656Z","lvl":"info","msg":"Starting metrics server","addr":"http://0.0.0.0:9001/debug/metrics"}
+{"t":"2025-10-15T19:04:52.30246705Z","lvl":"info","msg":"Allocated trie memory caches","clean":"307.00 MiB","dirty":"0.00 B"}
+{"t":"2025-10-15T19:04:52.302654066Z","lvl":"info","msg":"Using pebble as the backing database"}
+{"t":"2025-10-15T19:04:52.30268786Z","lvl":"info","msg":"Allocated cache and file handles","database":"/data/geth/execution-data/geth/chaindata","cache":"512.00 MiB","handles":536870908}
+{"t":"2025-10-15T19:04:52.421772009Z","lvl":"info","msg":"Opened ancient database","database":"/data/geth/execution-data/geth/chaindata/ancient/chain","readonly":false}
+{"t":"2025-10-15T19:04:52.421825851Z","lvl":"info","msg":"Opened Era store","datadir":"/data/geth/execution-data/geth/chaindata/ancient/chain/era"}
+{"t":"2025-10-15T19:04:52.457227065Z","lvl":"info","msg":"State scheme set by user","scheme":"hash"}
+{"t":"2025-10-15T19:04:52.458777418Z","lvl":"info","msg":"Initialising Ethereum protocol","network":271828,"dbversion":"<nil>"}
+{"t":"2025-10-15T19:04:52.459745597Z","lvl":"info","msg":""}
+{"t":"2025-10-15T19:04:52.460032428Z","lvl":"info","msg":"---------------------------------------------------------------------------------------------------------------------------------------------------------"}
+{"t":"2025-10-15T19:04:52.460429556Z","lvl":"info","msg":"Chain ID:  271828 (unknown)"}
+{"t":"2025-10-15T19:04:52.460589903Z","lvl":"info","msg":"Consensus: unknown"}
+{"t":"2025-10-15T19:04:52.460724981Z","lvl":"info","msg":""}
+{"t":"2025-10-15T19:04:52.460854746Z","lvl":"info","msg":"Pre-Merge hard forks (block based):"}
+{"t":"2025-10-15T19:04:52.461025662Z","lvl":"info","msg":" - Homestead:                   #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/homestead.md)"}
+{"t":"2025-10-15T19:04:52.461174728Z","lvl":"info","msg":" - Tangerine Whistle (EIP 150): #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/tangerine-whistle.md)"}
+{"t":"2025-10-15T19:04:52.461306961Z","lvl":"info","msg":" - Spurious Dragon/1 (EIP 155): #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/spurious-dragon.md)"}
+{"t":"2025-10-15T19:04:52.461427956Z","lvl":"info","msg":" - Spurious Dragon/2 (EIP 158): #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/spurious-dragon.md)"}
+{"t":"2025-10-15T19:04:52.461577427Z","lvl":"info","msg":" - Byzantium:                   #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/byzantium.md)"}
+{"t":"2025-10-15T19:04:52.461673067Z","lvl":"info","msg":" - Constantinople:              #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/constantinople.md)"}
+{"t":"2025-10-15T19:04:52.461842739Z","lvl":"info","msg":" - Petersburg:                  #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/petersburg.md)"}
+{"t":"2025-10-15T19:04:52.461996197Z","lvl":"info","msg":" - Istanbul:                    #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/istanbul.md)"}
+{"t":"2025-10-15T19:04:52.462129587Z","lvl":"info","msg":" - Berlin:                      #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/berlin.md)"}
+{"t":"2025-10-15T19:04:52.462290656Z","lvl":"info","msg":" - London:                      #0        (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/london.md)"}
+{"t":"2025-10-15T19:04:52.462389775Z","lvl":"info","msg":""}
+{"t":"2025-10-15T19:04:52.462562374Z","lvl":"info","msg":"Merge configured:"}
+{"t":"2025-10-15T19:04:52.462697558Z","lvl":"info","msg":" - Hard-fork specification:    https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/paris.md"}
+{"t":"2025-10-15T19:04:52.462844804Z","lvl":"info","msg":" - Network known to be merged"}
+{"t":"2025-10-15T19:04:52.462975483Z","lvl":"info","msg":" - Total terminal difficulty:  0"}
+{"t":"2025-10-15T19:04:52.463106462Z","lvl":"info","msg":" - Merge netsplit block:       #0       "}
+{"t":"2025-10-15T19:04:52.463263152Z","lvl":"info","msg":""}
+{"t":"2025-10-15T19:04:52.463424585Z","lvl":"info","msg":"Post-Merge hard forks (timestamp based):"}
+{"t":"2025-10-15T19:04:52.463578326Z","lvl":"info","msg":" - Shanghai:                    @0          (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/shanghai.md)"}
+{"t":"2025-10-15T19:04:52.463676505Z","lvl":"info","msg":" - Cancun:                      @0          (https://github.com/ethereum/execution-specs/blob/master/network-upgrades/mainnet-upgrades/cancun.md)"}
+{"t":"2025-10-15T19:04:52.463842614Z","lvl":"info","msg":" - Prague:                      @1759178013"}
+{"t":"2025-10-15T19:04:52.46401488Z","lvl":"info","msg":""}
+{"t":"2025-10-15T19:04:52.464181174Z","lvl":"info","msg":"---------------------------------------------------------------------------------------------------------------------------------------------------------"}
+{"t":"2025-10-15T19:04:52.464313218Z","lvl":"info","msg":""}
+{"t":"2025-10-15T19:04:52.464962058Z","lvl":"info","msg":"Loaded most recent local block","number":"0","hash":"0x8ba85758bf57d4ef112666177db90fab92af8d89ed20ffebdf94f3cc3a4bcb74","age":"2w1d22h"}
+{"t":"2025-10-15T19:04:52.465429719Z","lvl":"warn","msg":"Failed to load snapshot","err":"missing or corrupted snapshot"}
+{"t":"2025-10-15T19:04:52.465631436Z","lvl":"info","msg":"Rebuilding state snapshot"}
+{"t":"2025-10-15T19:04:52.466195032Z","lvl":"info","msg":"Initialized transaction indexer","range":"entire chain"}
+{"t":"2025-10-15T19:04:52.473241089Z","lvl":"info","msg":"Resuming state snapshot generation","root":"0x79f54cce9fd251fcc39c727b5db2d0fa94f7b76782be5cdf8336bd5cae24e609","accounts":0,"slots":0,"storage":"0.00 B","dangling":0,"elapsed":"7.449ms"}
+{"t":"2025-10-15T19:04:52.534877067Z","lvl":"info","msg":"Generated state snapshot","accounts":282,"slots":33,"storage":"14.12 KiB","dangling":0,"elapsed":"69.091ms"}
+{"t":"2025-10-15T19:04:52.668968919Z","lvl":"info","msg":"Enabled snap sync","head":"0","hash":"0x8ba85758bf57d4ef112666177db90fab92af8d89ed20ffebdf94f3cc3a4bcb74"}
+{"t":"2025-10-15T19:04:52.669510154Z","lvl":"info","msg":"Unprotected transactions allowed"}
+{"t":"2025-10-15T19:04:52.669666141Z","lvl":"info","msg":"Gasprice oracle is ignoring threshold set","threshold":"2"}
+{"t":"2025-10-15T19:04:52.670823973Z","lvl":"info","msg":"Registered sync override service"}
+{"t":"2025-10-15T19:04:52.671464448Z","lvl":"warn","msg":"Engine API enabled","protocol":"eth"}
+{"t":"2025-10-15T19:04:52.671653498Z","lvl":"info","msg":"Starting peer-to-peer node","instance":"Geth/v1.16.3-stable-d818a9af/linux-amd64/go1.24.6"}
+{"t":"2025-10-15T19:04:52.692576712Z","lvl":"info","msg":"New local node record","seq":1760555092690,"id":"45f4ff69766ba846066aa3a72a4ac14894fb3214cce2dbfced4c6bea966975dc","ip":"172.16.0.12","udp":30303,"tcp":30303}
+{"t":"2025-10-15T19:04:52.69557523Z","lvl":"info","msg":"IPC endpoint opened","url":"/data/geth/execution-data/geth.ipc"}
+{"t":"2025-10-15T19:04:52.697509233Z","lvl":"info","msg":"Loaded JWT secret file","path":"/jwt/jwtsecret","crc32":"0xec7a0f2c"}
+{"t":"2025-10-15T19:04:52.698702893Z","lvl":"info","msg":"HTTP server started","endpoint":"[::]:8545","auth":false,"prefix":"","cors":"*","vhosts":"*"}
+{"t":"2025-10-15T19:04:52.699191153Z","lvl":"info","msg":"WebSocket enabled","url":"ws://[::]:8546"}
+{"t":"2025-10-15T19:04:52.699594986Z","lvl":"info","msg":"WebSocket enabled","url":"ws://[::]:8551"}
+{"t":"2025-10-15T19:04:52.699775744Z","lvl":"info","msg":"HTTP server started","endpoint":"[::]:8551","auth":true,"prefix":"","cors":"localhost","vhosts":"*"}
+{"t":"2025-10-15T19:04:52.702690824Z","lvl":"info","msg":"Started P2P networking","self":"enode://dbb6102907d41d4d8e82ab6e199c1dd8f3aa663b09b4df060b36cd5b10c9f9b364ad8fcd970ee9add008960a88fdf8f9b6809a586cdb7b0b7bdc26f01a5a44c5@172.16.0.12:30303"}
+{"t":"2025-10-15T19:04:52.70399266Z","lvl":"info","msg":"Started log indexer"}
+{"t":"2025-10-15T19:05:27.675749552Z","lvl":"warn","msg":"Beacon client online, but no consensus updates received in a while. Please fix your beacon client to follow the chain!"}
+
