@@ -29,3 +29,12 @@ Error response from daemon: container a6113703630cad6b926df78ad9e42add193fe6a943
 {"t":"2025-10-20T19:38:42.629839213Z","lvl":"warn","msg":"Beacon client online, but no consensus updates received in a while. Please fix your beacon client to follow the chain!"}
 {"t":"2025-10-20T19:43:42.680774686Z","lvl":"warn","msg":"Beacon client online, but no consensus updates received in a while. Please fix your beacon client to follow the chain!"}
 [root@srv-blkcstdes01 docker-autocompose]#
+
+
+{"current_epoch":113296,"err":"FailedToDownloadAttesters(\"Some endpoints failed, num_failed: 2 http://cl-1-lighthouse-geth:4000/ => RequestFailed(HttpClient(url: http://cl-1-lighthouse-geth:4000/, kind: timeout, detail: operation timed out)), http://cl-1-lighthouse-geth:4000/ => RequestFailed(HttpClient(url: http://cl-1-lighthouse-geth:4000/, kind: timeout, detail: operation timed out))\")","level":"ERROR","module":"validator_services::duties_service:738","msg":"Failed to download attester duties","request_epoch":113296,"ts":"2025-10-20T20:05:45.005994Z"}
+{"available":0,"level":"ERROR","module":"validator_services::notifier_service:69","msg":"No synced beacon nodes","synced":0,"total":1,"ts":"2025-10-20T20:05:46.001418Z"}
+{"epoch":113296,"level":"INFO","module":"validator_services::notifier_service:143","msg":"Awaiting activation","slot":906374,"ts":"2025-10-20T20:05:46.002287Z","validators":64}
+{"endpoint":"http://cl-1-lighthouse-geth:4000/","error":"HttpClient(url: http://cl-1-lighthouse-geth:4000/, kind: timeout, detail: operation timed out)","level":"ERROR","module":"beacon_node_fallback:293","msg":"Unable to read spec from beacon node","ts":"2025-10-20T20:05:47.321715Z"}
+{"endpoint":"http://cl-1-lighthouse-geth:4000/","error":"Offline","level":"WARN","module":"beacon_node_fallback:533","msg":"A connected beacon node errored during routine health check","ts":"2025-10-20T20:05:47.322646Z"}
+{"available":0,"level":"ERROR","module":"validator_services::notifier_service:69","msg":"No synced beacon nodes","synced":0,"total":1,"ts":"2025-10-20T20:05:48.001531Z"}
+{"epoch":113296,"level":"INFO","module":"validator_services::notifier_service:143","msg":"Awaiting activation","slot":906375,"ts":"2025-10-20T20:05:48.003711Z","validators":64}
