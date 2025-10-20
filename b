@@ -68,5 +68,9 @@ FAIL
 [root@srv-blkcstdes01 docker-autocompose]#
 
 
+[root@srv-blkcstdes01 docker-autocompose]# docker exec -it vc-1-geth-lighthouse--1e310aef61c74de1bf123e9f72d28b24 bash -lc 'exec 3<>/dev/tcp/127.0.0.1/4000 && echo OK || echo FAIL'
+bash: connect: Connection refused
+bash: line 1: /dev/tcp/127.0.0.1/4000: Connection refused
+FAIL
 
 
