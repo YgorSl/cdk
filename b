@@ -38,3 +38,22 @@ Error response from daemon: container a6113703630cad6b926df78ad9e42add193fe6a943
 {"endpoint":"http://cl-1-lighthouse-geth:4000/","error":"Offline","level":"WARN","module":"beacon_node_fallback:533","msg":"A connected beacon node errored during routine health check","ts":"2025-10-20T20:05:47.322646Z"}
 {"available":0,"level":"ERROR","module":"validator_services::notifier_service:69","msg":"No synced beacon nodes","synced":0,"total":1,"ts":"2025-10-20T20:05:48.001531Z"}
 {"epoch":113296,"level":"INFO","module":"validator_services::notifier_service:143","msg":"Awaiting activation","slot":906375,"ts":"2025-10-20T20:05:48.003711Z","validators":64}
+
+
+
+[root@srv-blkcstdes01 docker-autocompose]# docker exec -it vc-1-geth-lighthouse--1e310aef61c74de1bf123e9f72d28b24 sh -lc 'getent hosts cl-1-lighthouse-geth || true'
+172.16.0.4      cl-1-lighthouse-geth
+[root@srv-blkcstdes01 docker-autocompose]# docker exec -it vc-1-geth-lighthouse--1e310aef61c74de1bf123e9f72d28b24 curl -s http://cl-1-lighthouse-geth:4000/eth/v1/node/identity
+OCI runtime exec failed: exec failed: unable to start container process: exec: "curl": executable file not found in $PATH: unknown
+[root@srv-blkcstdes01 docker-autocompose]# docker logs -f vc-1-geth-lighthouse--1e310aef61c74de1bf123e9f72d28b24  
+
+
+{"err":"Some endpoints failed, num_failed: 2 http://cl-1-lighthouse-geth:4000/ => RequestFailed(HttpClient(url: http://cl-1-lighthouse-geth:4000/, kind: timeout, detail: operation timed out)), http://cl-1-lighthouse-geth:4000/ => RequestFailed(HttpClient(url: http://cl-1-lighthouse-geth:4000/, kind: timeout, detail: operation timed out))","level":"ERROR","module":"validator_services::duties_service:1377","msg":"Failed to download proposer duties","ts":"2025-10-20T20:25:17.005558Z"}
+{"available":0,"level":"ERROR","module":"validator_services::notifier_service:69","msg":"No synced beacon nodes","synced":0,"total":1,"ts":"2025-10-20T20:25:18.001273Z"}
+{"epoch":113370,"level":"INFO","module":"validator_services::notifier_service:143","msg":"Awaiting activation","slot":906960,"ts":"2025-10-20T20:25:18.002128Z","validators":64}
+{"endpoint":"http://cl-1-lighthouse-geth:4000/","error":"HttpClient(url: http://cl-1-lighthouse-geth:4000/, kind: timeout, detail: operation timed out)","level":"ERROR","module":"beacon_node_fallback:293","msg":"Unable to read spec from beacon node","ts":"2025-10-20T20:25:18.256204Z"}
+{"endpoint":"http://cl-1-lighthouse-geth:4000/","error":"Offline","level":"WARN","module":"beacon_node_fallback:533","msg":"A connected beacon node errored during routine health check","ts":"2025-10-20T20:25:18.256594Z"}
+{"error":"Some endpoints failed, num_failed: 1 http://cl-1-lighthouse-geth:4000/ => RequestFailed(HttpClient(url: http://cl-1-lighthouse-geth:4000/, kind: timeout, detail: operation timed out))","level":"ERROR","module":"validator_services::preparation_service:342","msg":"Unable to publish proposer preparation to all beacon nodes","ts":"2025-10-20T20:25:19.003347Z"}
+{"available":0,"level":"ERROR","module":"validator_services::notifier_service:69","msg":"No synced beacon nodes","synced":0,"total":1,"ts":"2025-10-20T20:25:20.001800Z"}
+{"epoch":113370,"level":"INFO","module":"validator_services::notifier_service:143","msg":"Awaiting activation","slot":906961,"ts":"2025-10-20T20:25:20.001939Z","validators":64}
+
