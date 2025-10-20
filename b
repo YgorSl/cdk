@@ -57,3 +57,16 @@ OCI runtime exec failed: exec failed: unable to start container process: exec: "
 {"available":0,"level":"ERROR","module":"validator_services::notifier_service:69","msg":"No synced beacon nodes","synced":0,"total":1,"ts":"2025-10-20T20:25:20.001800Z"}
 {"epoch":113370,"level":"INFO","module":"validator_services::notifier_service:143","msg":"Awaiting activation","slot":906961,"ts":"2025-10-20T20:25:20.001939Z","validators":64}
 
+
+o curl ficou rodando um tempo sem resposta e cancelei
+[root@srv-blkcstdes01 docker-autocompose]# curl -s http://127.0.0.1:32803/eth/v1/node/identity
+^C
+[root@srv-blkcstdes01 docker-autocompose]# docker exec -it vc-1-geth-lighthouse--1e310aef61c74de1bf123e9f72d28b24 bash -lc 'exec 3<>/dev/tcp/cl-1-lighthouse-geth--4454af5d8ed7421989d616ca5f9a7cb3:4000 && echo OK || echo FAIL' 2>/dev/null
+bash: line 1: /dev/tcp/cl-1-lighthouse-geth--4454af5d8ed7421989d616ca5f9a7cb3:4000: No such file or directory
+FAIL
+[root@srv-blkcstdes01 docker-autocompose]# ^C
+[root@srv-blkcstdes01 docker-autocompose]#
+
+
+
+
