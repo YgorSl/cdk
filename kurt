@@ -1,0 +1,40 @@
+UUID           Name                                             Ports                                                     Status
+c8fc5cd9c447   agglayer                                         aglr-admin: 4446/tcp -> http://127.0.0.1:32791            RUNNING
+                                                                aglr-grpc: 4443/tcp -> grpc://127.0.0.1:32789
+                                                                aglr-readrpc: 4444/tcp -> http://127.0.0.1:32790
+                                                                prometheus: 9092/tcp -> http://127.0.0.1:32792
+7cb7da8d5563   agglayer-prover                                  api: 4445/tcp -> grpc://127.0.0.1:32787                   RUNNING
+                                                                prometheus: 9093/tcp -> http://127.0.0.1:32788
+847551445e98   cdk-erigon-rpc-001                               pprof: 6060/tcp -> http://127.0.0.1:32801                 RUNNING
+                                                                prometheus: 9091/tcp -> http://127.0.0.1:32804
+                                                                rpc: 8123/tcp -> http://127.0.0.1:32802
+                                                                ws-rpc: 8133/tcp -> ws://127.0.0.1:32803
+5f0875357c10   cdk-erigon-sequencer-001                         data-streamer: 6900/tcp -> datastream://127.0.0.1:32796   RUNNING
+                                                                pprof: 6060/tcp -> http://127.0.0.1:32795
+                                                                prometheus: 9091/tcp -> http://127.0.0.1:32799
+                                                                rpc: 8123/tcp -> http://127.0.0.1:32797
+                                                                ws-rpc: 8133/tcp -> ws://127.0.0.1:32798
+19efa5281a63   cdk-node-001                                     aggregator: 50081/tcp -> grpc://127.0.0.1:32809           RUNNING
+                                                                rest: 5577/tcp -> http://127.0.0.1:32808
+                                                                rpc: 5576/tcp -> http://127.0.0.1:32807
+39f179cb42ee   cl-1-lighthouse-geth                             http: 4000/tcp -> http://127.0.0.1:32781                  RUNNING
+                                                                metrics: 5054/tcp -> http://127.0.0.1:32782
+                                                                quic-discovery: 9001/udp -> 127.0.0.1:32770
+                                                                tcp-discovery: 9000/tcp -> 127.0.0.1:32783
+                                                                udp-discovery: 9000/udp -> 127.0.0.1:32769
+583fe2f5efab   contracts-001                                    http: 8080/tcp -> http://127.0.0.1:32785                  RUNNING
+34d42e3f1cd3   el-1-geth-lighthouse                             engine-rpc: 8551/tcp -> 127.0.0.1:32778                   RUNNING
+                                                                metrics: 9001/tcp -> http://127.0.0.1:32779
+                                                                rpc: 8545/tcp -> 127.0.0.1:32776
+                                                                tcp-discovery: 30303/tcp -> 127.0.0.1:32780
+                                                                udp-discovery: 30303/udp -> 127.0.0.1:32768
+                                                                ws: 8546/tcp -> 127.0.0.1:32777
+5add1279340a   postgres-001                                     postgres: 5432/tcp -> postgresql://127.0.0.1:32786        RUNNING
+d798cef89e22   validator-key-generation-cl-validator-keystore   <none>                                                    RUNNING
+b1b460406d61   vc-1-geth-lighthouse                             metrics: 8080/tcp -> http://127.0.0.1:32784               RUNNING
+a064da93ee5c   zkevm-pool-manager-001                           http: 8545/tcp -> http://127.0.0.1:32800                  RUNNING
+392c43e37634   zkevm-prover-001                                 executor: 50071/tcp -> grpc://127.0.0.1:32806             RUNNING
+                                                                hash-db: 50061/tcp -> grpc://127.0.0.1:32805
+4edf544a5942   zkevm-stateless-executor-001                     executor: 50071/tcp -> grpc://127.0.0.1:32794             RUNNING
+                                                                hash-db: 50061/tcp -> grpc://127.0.0.1:32793
+
