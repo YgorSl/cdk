@@ -410,3 +410,155 @@ function orchestrateAccounting(uint256 _debentureSubId, uint256 _requestId, uint
 dup, dut, dcp, dct devem ser calculados com base nas datas de aniversário (buscar informação no campo X - definir campo de data de remuneração) e data de cálculo
 Datas de aniversário devem ser parametrizáveis por ativo
 
+
+Pelo que entendi:
+
+temos a data de aniversario e a data atual entao conseguimos pegar o dcp que é o Número de dias corridos entre a última data de aniversário e a data de cálculo,(tudo em timestamp)
+preciso de alguma forma calcular o Número de dias corridos contidos entre a última e a próxima data de aniversário.
+passaremos o timestamp atual e o aniversario para o manager para fazer esses calculos
+
+agora pelo que entendi em relação ao nik:
+
+segundo a formula precisamos pegar os valores de k=1 a n ou seja todos que temos registrados pelo oeaculo
+nik e o valor do mes anterior ao que estamos fazendo o calculo e nik-1 o valor do mes anterior a nik
+temos que achar uma forma de usarmos todos os valores que estão no oraculo?
+
+
+Esse é o codigo do oraculo se ajudar em algo:
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.26;
+
+import {IOracleIndexes} from "../interfaces/IOracleIndexes.sol";
+import {IAccessControlRegistry} from "../access/IAccessControlRegistry.sol";
+import {Roles} from "../utils/Roles.sol";
+
+/// @title Base contract for oracles
+contract OracleIndexes is IOracleIndexes {
+
+    IAccessControlRegistry public _accessControl;
+
+    /// @notice Number of decimal places used for the indicator values.
+    uint8 private decimals;
+
+    /// @notice Name of the indicator (e.g., CDI, IPCA).
+    string private name;
+
+    /// @notice Maps the start-of-day timestamp to the corresponding indicator.
+    mapping(Indexes => mapping(uint256 => Indicator)) indicators;
+    
+    /// @notice The most recently registered indicator for a specific index.
+    mapping(Indexes => Indicator) lastIndicator;
+
+    //Indicator private lastIndicator;
+    
+    /// @notice Indicates whether the oracle is currently active.
+    /// @dev Used to control the operational status of the oracle
+    bool private _isActive;
+
+    modifier onlyRole(bytes32 _role) {
+        require(
+            _checkRole(_role, msg.sender),
+            "User not allowed to perform this operation!"
+        );
+        _;
+    }
+
+    /// @notice Initializes the contract with the indicator name and its decimal precision.
+    /// @param _name The name of the indicator.
+    /// @param _decimals The number of decimal places used for the indicator.
+    constructor(string memory _name, uint8 _decimals,  address _accessControlRegistryAddress) {
+        decimals = _decimals;
+        name = _name;
+        _isActive = true;
+        _accessControl = IAccessControlRegistry(_accessControlRegistryAddress);
+    }
+
+    /// @notice Registers a new indicator value for a specific timestamp.
+    /// @dev The timestamp is normalized to the start of the day (00:00 UTC).
+    /// @param _timestamp The timestamp of the indicator update.
+    /// @param _value The value of the indicator.
+    /// @param _index The index for which to retrieve the indicator.
+    function registerIndicator(
+        uint256 _timestamp,
+        int256 _value,
+        Indexes _index
+    ) external override onlyRole(Roles.OPERATOR) {
+        uint256 startOfDayTimestamp = startOfDayTs(_timestamp);
+        Indicator memory _lastIndicator = Indicator({
+            index: _index,
+            value: _value,
+            updatedAt: _timestamp
+        });
+        indicators[_index][startOfDayTimestamp] = _lastIndicator;
+        lastIndicator[_index] = _lastIndicator;
+
+        emit IndicatorRegistered(_timestamp, startOfDayTimestamp, _value, _index);
+    }
+
+    /// @notice Returns the most recently registered indicator.
+    /// @param _index The index for which to retrieve the indicator.
+    /// @return The latest indicator including its value and update timestamp.
+    function getLatestIndicator(Indexes _index) external view onlyRole(Roles.OPERATOR) returns (Indicator memory) {
+        return lastIndicator[_index];
+    }
+
+    /// @notice Retrieves the indicator for a specific day.
+    /// @dev The timestamp is normalized to the start of the day (00:00 UTC).
+    /// @param _index The index for which to retrieve the indicator.
+    /// @param _timestamp The timestamp for which to retrieve the indicator.
+    /// @return The indicator corresponding to the given day.
+    function getIndicator(
+        Indexes _index,
+        uint256 _timestamp
+    ) external view onlyRole(Roles.OPERATOR) returns (Indicator memory) {
+        uint256 startOfDayTimestamp = startOfDayTs( _timestamp);
+        return indicators[_index][startOfDayTimestamp];
+    }
+    
+    /// @notice Retrieves the name of the oracle.
+    /// @dev This is a simple getter that returns the internal `_name` variable.
+    /// @return The name of the oracle as a string.
+    function getName() external view onlyRole(Roles.OPERATOR) returns (string memory) {
+        return name;
+    }
+
+    /// @notice Retrieves the number of decimals used by the oracle.
+    /// @dev This is a simple getter that returns the internal `_decimals` variable.
+    /// @return The number of decimals as an unsigned 8-bit integer.
+    function getDecimals() external view onlyRole(Roles.OPERATOR) returns (uint8) {
+        return decimals;
+    }
+
+    /// @notice Checks whether the oracle is currently active.
+    /// @dev Returns the value of the internal `_isActive` flag.
+    /// @return A boolean indicating if the oracle is active.
+    function isActive() external view override onlyRole(Roles.OPERATOR) returns(bool){
+        return _isActive;
+    }
+
+    /// @notice Sets the active status of the oracle.
+    /// @dev Updates the `_isActive` flag and emits an `OracleStatusChanged` event.
+    /// @param status A boolean value indicating the new active status.
+    function setActive(bool status) external override onlyRole(Roles.ADMIN) {
+        _isActive = status;
+        emit OracleStatusChanged(msg.sender, name, status);
+    }
+
+    ///@dev Centralized logic to check if an account has a given role or is a global ADMIN.
+    ///@param role The bytes32 identifier of the role to check.
+    ///@param account The address of the account to check.
+    ///@return bool True if the account has the specified role or the ADMIN role.
+    function _checkRole(bytes32 role, address account) internal view returns (bool) {
+        return _accessControl.hasRole(role, account) || _accessControl.hasRole(Roles.ADMIN, account);
+    }
+
+    /// @notice Converts a timestamp to the start of the day (00:00 UTC).
+    /// @param _timestamp The original timestamp.
+    /// @return startOfDayTimestamp The normalized start-of-day timestamp.
+    function startOfDayTs(uint256 _timestamp) internal pure returns (uint256 startOfDayTimestamp) {
+        startOfDayTimestamp = _timestamp - (_timestamp % 86400);
+        return startOfDayTimestamp;
+    }
+}
+
+
