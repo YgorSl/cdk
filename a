@@ -3,3 +3,43 @@
 {"hint":"the execution endpoint may be offline","info":"Could not exchange capabilities with the execution endpoint: ApiError(HttpClient(url: http://el-1-geth-lighthouse:8551/, kind: request, detail: error trying to connect: dns error: failed to lookup address information: Name or service not known))","level":"ERROR","module":"client::notifier:553","msg":"Not ready for Electra","ts":"2025-10-15T19:25:10.015843Z"}
 {"error":"HttpClient(url: http://el-1-geth-lighthouse:8551/, kind: request, detail: error trying to connect: dns error: failed to lookup address information: Name or service not known)","level":"ERROR","module":"execution_layer::engines:265","msg":"Error during execution engine upcheck","ts":"2025-10-15T19:25:10.030042Z"}
 {"error":"HttpClient(url: http://el-1-geth-lighthouse:8551/, kind: request, detail: error trying to connect: dns error: failed to lookup address information: Name or service not known)","level":"ERROR","module":"execution_layer::engines:265","msg":"Error during execution engine upcheck","ts":"2025-10-15T19:25:10.432167Z"}
+
+
+   /// @notice Calcula o fator acumulado C e o novo VNA
+    /// @dev Fórmula: C = Cprev * (NI_k / NI_{k-1})^(daysNum / daysDen)
+    /// @param requestId id lógico da operação (não usado aqui, apenas p/ tracking)
+    /// @param previousCwad fator acumulado anterior (1e18 = 1.0)
+    /// @param nik número-índice do mês atual (NI_k)
+    /// @param nik_1 número-índice do mês anterior (NI_{k-1})
+    /// @param daysNum dcp ou dup (dias decorridos)
+    /// @param daysDen dct ou dut (total de dias no ciclo)
+    /// @param vne valor nominal base
+    function calculateIndexFactor(
+        uint256 requestId,
+        uint256 previousCwad,
+        uint256 nik,
+        uint256 nik_1,
+        uint256 daysNum,
+        uint256 daysDen,
+        uint256 vne
+    ) external pure override returns (uint256 newCwad, uint256 vna) {
+        require(nik_1 > 0 && daysDen > 0, "Invalid divisor");
+
+        // 1️⃣ razão entre índices (NI_k / NI_{k-1})
+        uint256 ratioWad = (nik * WAD) / nik_1;
+
+        // 2️⃣ expoente (diasNum / diasDen) em WAD
+        uint256 expWad = (daysNum * WAD) / daysDen;
+
+        // 3️⃣ fator parcial = ratio^(daysNum/daysDen)
+        // para simplificação, usamos aproximação linear: 1 + (ratio - 1) * exp
+        // (suficiente para variações pequenas mês a mês)
+        uint256 diff = ratioWad > WAD ? ratioWad - WAD : 0;
+        uint256 fatorParcial = WAD + (diff * expWad) / WAD;
+
+        // 4️⃣ fator acumulado novo
+        newCwad = (previousCwad * fatorParcial) / WAD;
+
+        // 5️⃣ VNA = VNE * C
+        vna = (vne * newCwad) / WAD;
+    }
