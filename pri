@@ -370,3 +370,12 @@ library DIOverMath {
         return uint256(pu);
     }
 }
+
+    
+    enum DayBasisRemuneration {
+        DiasCorridos365, // 0
+        DiasCorridos360, // 1
+        DiasUteis252     // 2
+    }
+}
+
