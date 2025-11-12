@@ -406,3 +406,7 @@ function orchestrateAccounting(uint256 _debentureSubId, uint256 _requestId, uint
             return 0;
         }
 
+
+dup, dut, dcp, dct devem ser calculados com base nas datas de aniversário (buscar informação no campo X - definir campo de data de remuneração) e data de cálculo
+Datas de aniversário devem ser parametrizáveis por ativo
+
