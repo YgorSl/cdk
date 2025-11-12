@@ -379,3 +379,30 @@ library DIOverMath {
     }
 }
 
+
+function orchestrateAccounting(uint256 _debentureSubId, uint256 _requestId, uint256 _timestamp) public onlyRole(Roles.OPERATOR) returns(uint256) {
+        DebentureToken.SubIdData memory debentureToken = debentureContract.getDebentureSubInfo(_debentureSubId);
+
+        if (debentureToken.bondYield == Indexes.Parameters.NA) {
+            //accountingManager.calculateLinearInterestValue(_requestId);
+            return 0;
+        }
+
+        if (
+            debentureToken.bondYield == Indexes.Parameters.IGPM ||
+            debentureToken.bondYield == Indexes.Parameters.IGPDI ||
+            debentureToken.bondYield == Indexes.Parameters.IPCM ||
+            debentureToken.bondYield == Indexes.Parameters.IPCFIPE ||
+            debentureToken.bondYield == Indexes.Parameters.INCCM ||
+            debentureToken.bondYield == Indexes.Parameters.INCCDI ||
+            debentureToken.bondYield == Indexes.Parameters.INPC ||
+            debentureToken.bondYield == Indexes.Parameters.IPCA
+        ) {
+            IOracleIndexes.Indexes index = mapToOracleIndex(debentureToken.bondYield);
+            IOracleIndexes.Indicator memory indicator = oracleIndexes.getIndicator(index, _timestamp);
+            
+            require(indicator.updatedAt != 0, "Indicator not available!");
+            //accountingManager.calculateIndex();
+            return 0;
+        }
+
