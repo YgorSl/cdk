@@ -562,3 +562,19 @@ contract OracleIndexes is IOracleIndexes {
 }
 
 
+ // chama o contrato de cálculo
+    _updatedC = calculator.calculateIndexFactor(
+        _requestId,
+        iac.interestFactor,
+        nik,
+        nik_1,
+        _daysNum,
+        _daysDen,
+    );
+
+    // atualiza storage
+    iac.interestFactor = _updatedC;
+    //função para atualizar o vna
+    iac.interest = vna;
+
+
