@@ -250,3 +250,36 @@ contract AccountingDITest is Test {
     }
 
 }
+
+
+na chamada no orchestrator para o manager atualizei com o enum que diz se sera feito o calculo com dias corridos ou dias uteis
+//indice, subidtoken, timestamp ,requestid,latestvalor,previuosvale??, vne, birthday, tipodedia
+            uint256 _interest = accountingManager.calculateIndexes(debentureToken.bondYield, debentureToken.subId, _timestamp, _requestId, uint256(indicator.value),uint256(previousIndicator.value), debentureToken.vne, debentureToken.paymentFeeStartDate, debentureToken.dayBasisRemuneration);
+
+coloquei tambem na função do manager
+ function calculateIndexes( 
+        Indexes.Parameters _parameter,   // ex.: IPCA, IGPM
+        uint256 _debentureSubId,
+        uint256 _timestamp,
+        uint256 _requestId,
+        int256 _nik,                     // NI_k vindo do oráculo
+        int256 _nik_1,                   // NI_{k-1} vindo do oráculo
+        uint256 _vne,
+        uint256 _birthday,
+        DebentureEnums.DayBasisRemuneration _dayBasis
+
+    )
+
+porque precisamos seguir a regra de fazer cada calculos se for dia util ou dia corrido na função de calculo
+
+tambem preciso que faça esse Todo de calcular os dias  //TO-DO função para calcular _daysNum, _daysDen
+
+    // chama o contrato de cálculo
+    _updatedC = calculator.calculateIndexFactor(
+        _requestId,
+        iac.interestFactor,
+        nik,
+        nik_1,
+        _daysNum,
+        _daysDen,
+    );
