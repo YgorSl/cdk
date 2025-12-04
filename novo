@@ -1,0 +1,146 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
+import {AccessControlRegistry} from "../src/access/AccessControlRegistry.sol";
+import {AccountingIndexes} from "../src/calculations-contracts/AccountingIndexes.sol";
+import {Roles} from "../src/utils/Roles.sol";
+import {DIOverMath} from "../src/lib/DIOverMath.sol";
+
+contract AccountingIndexesTest is Test {
+    AccountingIndexes internal accounting;
+    AccessControlRegistry internal accessControlRegistry;
+
+    // Roles
+    bytes32 internal constant OPERATOR_ROLE = Roles.OPERATOR;
+    bytes32 internal constant ADMIN_ROLE = Roles.ADMIN;
+
+    // Users
+    address internal operator;
+    address internal otherAccount;
+    address internal adminUser;
+
+    event IndexFactorCalculated(
+        uint256 requestId,
+        uint256 timestamp,
+        uint256 nik,
+        uint256 nik_1,
+        uint256 daysNum,
+        uint256 daysDen,
+        uint256 newC,
+        uint256 vna
+    );
+
+    function setUp() public {
+        operator = makeAddr("operator");
+        otherAccount = makeAddr("otherAccount");
+        adminUser = makeAddr("adminUser");
+
+        accessControlRegistry = new AccessControlRegistry();
+        accessControlRegistry.initialize();
+
+        accounting = new AccountingIndexes(address(accessControlRegistry));
+
+        accessControlRegistry.grantRole(OPERATOR_ROLE, operator);
+        accessControlRegistry.grantRole(ADMIN_ROLE, adminUser);
+        accessControlRegistry.grantRole(OPERATOR_ROLE, address(accounting));
+    }
+
+    /// 🔒 segurança: garante que apenas operador pode chamar
+    function test_Revert_When_Caller_Is_Not_Operator() public {
+        vm.prank(otherAccount);
+        vm.expectRevert();
+        accounting.calculateIndexFactor(1, 1e18, 58320, 58000, 15, 30, 1e18);
+    }
+
+    /// ✅ teste principal de cálculo de índice (cenário IPCA-like)
+    function test_calculateIndexFactor() public {
+        uint256 requestId = 1;
+        uint256 vne = 1e18; // valor nominal base
+        uint256 previousCwad = 1e18; // fator acumulado anterior = 1.000000e18
+        uint256 nik = 58320;  // índice atual
+        uint256 nik_1 = 58000; // índice anterior
+        uint256 daysNum = 15; // dias corridos desde o aniversário
+        uint256 daysDen = 30; // total de dias no período
+
+        // cálculo esperado manual:
+        // ratio = 58320 / 58000 = 1.005517
+        // expoente = 15 / 30 = 0.5
+        // fatorMensal = 1.0027576
+        // Cnovo = 1.0027576
+        // VNA = 1.0027576 * 1e18 = 1002757600000000000
+
+        uint256 expectedC = 1002757600000000000;
+        uint256 expectedVna = 1002757600000000000;
+
+        vm.startPrank(operator);
+        vm.expectEmit(true, true, true, true);
+        emit IndexFactorCalculated(
+            requestId,
+            block.timestamp,
+            nik,
+            nik_1,
+            daysNum,
+            daysDen,
+            expectedC,
+            expectedVna
+        );
+
+        (uint256 newC, uint256 vna) =
+            accounting.calculateIndexFactor(requestId, previousCwad, nik, nik_1, daysNum, daysDen, vne);
+        vm.stopPrank();
+
+        console.log("Cnovo:", newC);
+        console.log("VNA:", vna);
+
+        // tolerância de erro de 1e10 (por arredondamento de ln/exp)
+        assertApproxEqAbs(newC, expectedC, 1e10, "C mismatch");
+        assertApproxEqAbs(vna, expectedVna, 1e10, "VNA mismatch");
+    }
+
+    /// 🔄 teste com período completo (dcp = dct)
+    function test_calculateIndexFactorFullPeriod() public {
+        uint256 requestId = 2;
+        uint256 vne = 1000e18;
+        uint256 previousCwad = 1e18;
+        uint256 nik = 60000;
+        uint256 nik_1 = 58000;
+        uint256 daysNum = 30;
+        uint256 daysDen = 30;
+
+        // ratio = 60000 / 58000 = 1.03448
+        // expoente = 1
+        // C = 1.03448
+        uint256 expectedC = 1034480000000000000;
+        uint256 expectedVna = (vne * expectedC) / 1e18; // 1034.48e18
+
+        vm.startPrank(operator);
+        (uint256 newC, uint256 vna) =
+            accounting.calculateIndexFactor(requestId, previousCwad, nik, nik_1, daysNum, daysDen, vne);
+        vm.stopPrank();
+
+        assertApproxEqAbs(newC, expectedC, 1e10, "C mismatch");
+        assertApproxEqAbs(vna, expectedVna, 1e10, "VNA mismatch");
+    }
+
+    /// 🧮 teste com variação mínima de índice
+    function test_calculateIndexFactorSmallChange() public {
+        uint256 requestId = 3;
+        uint256 vne = 1e18;
+        uint256 previousCwad = 1e18;
+        uint256 nik = 58001;
+        uint256 nik_1 = 58000;
+        uint256 daysNum = 15;
+        uint256 daysDen = 30;
+
+        vm.startPrank(operator);
+        (uint256 newC, uint256 vna) =
+            accounting.calculateIndexFactor(requestId, previousCwad, nik, nik_1, daysNum, daysDen, vne);
+        vm.stopPrank();
+
+        // Espera algo levemente acima de 1.0000086
+        assertGt(newC, 1e18);
+        assertGt(vna, vne);
+    }
+}
