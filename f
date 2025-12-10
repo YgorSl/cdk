@@ -1,0 +1,199 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
+import {AccessControlRegistry} from "../src/access/AccessControlRegistry.sol";
+import {AccountingIndexes} from "../src/calculations-contracts/AccountingIndexes.sol";
+import {Roles} from "../src/utils/Roles.sol";
+import {DebentureEnums} from "../src/utils/DebentureEnums.sol";
+import {DIOverMath} from "../src/lib/DIOverMath.sol";
+
+contract AccountingIndexesTest is Test {
+    AccountingIndexes internal accounting;
+    AccessControlRegistry internal accessControlRegistry;
+
+    // Roles
+    bytes32 internal constant OPERATOR_ROLE = Roles.OPERATOR;
+    bytes32 internal constant ADMIN_ROLE = Roles.ADMIN;
+
+    // Users
+    address internal operator;
+    address internal otherAccount;
+    address internal adminUser;
+
+    event IndexFactorCalculated(
+        uint256 requestId,
+        uint256 timestamp,
+        uint256 nik,
+        uint256 nik_1,
+        uint256 daysNum,
+        uint256 daysDen,
+        uint256 newCwad,
+        uint256 vna
+    );
+
+    function setUp() public {
+        operator = makeAddr("operator");
+        otherAccount = makeAddr("otherAccount");
+        adminUser = makeAddr("adminUser");
+
+        accessControlRegistry = new AccessControlRegistry();
+        accessControlRegistry.initialize();
+
+        accounting = new AccountingIndexes(
+            address(accessControlRegistry)
+        );
+
+        accessControlRegistry.grantRole(OPERATOR_ROLE, operator);
+        accessControlRegistry.grantRole(ADMIN_ROLE, adminUser);
+        accessControlRegistry.grantRole(OPERATOR_ROLE, address(accounting));
+    }
+
+    // -------------------------------------------------------------------------
+    //  🔒 Segurança
+    // -------------------------------------------------------------------------
+    function test_Revert_When_Caller_Is_Not_Operator() public {
+        vm.prank(otherAccount);
+        vm.expectRevert();
+
+        accounting.calculateIndexFactor(
+            1,
+            1e18,
+            58000,
+            57500,
+            block.timestamp,
+            block.timestamp - 30 days,
+            DebentureEnums.DayBasisRemuneration.CALENDAR_DAYS,
+            1e18
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    //  🧮 Teste principal — cálculo IPCA-like
+    // -------------------------------------------------------------------------
+    function test_calculateIndexFactor() public {
+        uint256 requestId = 10;
+
+        uint256 previousCwad = 1e18; // C acumulado anterior
+        uint256 vne = 1e18;
+
+        uint256 nik   = 58320; // número-índice atual
+        uint256 nik_1 = 58000; // número-índice anterior
+
+        // birthday há 15 dias
+        uint256 birthday = block.timestamp - 15 days;
+
+        uint256 expected_daysNum = 15;
+        uint256 expected_daysDen = 30;
+
+        // ratio = 58320 / 58000 = 1.005517
+        // expoente = 15/30 = 0.5
+        // fator = sqrt(1.005517) = 1.0027576
+        // novoC = 1.0027576 * 1e18 ≈ 1002757600000000000
+
+        uint256 expectedC = 1002757600000000000;
+        uint256 expectedVna = expectedC;
+
+        vm.startPrank(operator);
+
+        vm.expectEmit(true, true, true, true);
+        emit IndexFactorCalculated(
+            requestId,
+            block.timestamp,
+            nik,
+            nik_1,
+            expected_daysNum,
+            expected_daysDen,
+            expectedC,
+            expectedVna
+        );
+
+        (uint256 newCwad, uint256 vna) = accounting.calculateIndexFactor(
+            requestId,
+            previousCwad,
+            nik,
+            nik_1,
+            block.timestamp,
+            birthday,
+            DebentureEnums.DayBasisRemuneration.CALENDAR_DAYS,
+            vne
+        );
+
+        vm.stopPrank();
+
+        assertApproxEqAbs(newCwad, expectedC, 1e10, "Cwad mismatch");
+        assertApproxEqAbs(vna, expectedVna, 1e10, "VNA mismatch");
+
+        console.log("newCwad:", newCwad);
+        console.log("vna:", vna);
+    }
+
+    // -------------------------------------------------------------------------
+    //  Teste com período completo (30/30)
+    // -------------------------------------------------------------------------
+    function test_calculateFullPeriod() public {
+        uint256 requestId = 2;
+        uint256 previousCwad = 1e18;
+        uint256 vne = 1000e18;
+
+        uint256 nik   = 60000;
+        uint256 nik_1 = 58000;
+
+        uint256 birthday = block.timestamp - 30 days;
+
+        // ratio = 60000/58000 = 1.0344827586
+        // expoente = 1 → mesmo valor
+        uint256 expectedC = 1034482758000000000;
+        uint256 expectedVna = (vne * expectedC) / 1e18;
+
+        vm.startPrank(operator);
+
+        (uint256 newCwad, uint256 vna) = accounting.calculateIndexFactor(
+            requestId,
+            previousCwad,
+            nik,
+            nik_1,
+            block.timestamp,
+            birthday,
+            DebentureEnums.DayBasisRemuneration.CALENDAR_DAYS,
+            vne
+        );
+
+        vm.stopPrank();
+
+        assertApproxEqAbs(newCwad, expectedC, 1e10);
+        assertApproxEqAbs(vna, expectedVna, 1e10);
+    }
+
+    // -------------------------------------------------------------------------
+    //  Teste com dias úteis
+    // -------------------------------------------------------------------------
+    function test_calculateIndexBusinessDays() public {
+        uint256 requestId = 5;
+        uint256 previousCwad = 1e18;
+        uint256 vne = 1e18;
+
+        uint256 nik   = 58320;
+        uint256 nik_1 = 58000;
+
+        // birthday há 10 dias (≈ 7-8 úteis)
+        uint256 birthday = block.timestamp - 10 days;
+
+        vm.startPrank(operator);
+        (uint256 newCwad, uint256 vna) = accounting.calculateIndexFactor(
+            requestId,
+            previousCwad,
+            nik,
+            nik_1,
+            block.timestamp,
+            birthday,
+            DebentureEnums.DayBasisRemuneration.BUSINESS_DAYS,
+            vne
+        );
+        vm.stopPrank();
+
+        assertGt(newCwad, previousCwad);
+        assertGt(vna, vne);
+    }
+}
