@@ -1,18 +1,76 @@
-function _getBirthdayRange(
-    uint256 birthday,
-    uint256 timestamp
-) internal pure returns (uint256 lastBirthday, uint256 nextBirthday) {
+  [29965] AccountingIndexesTest::test_calculateFullPeriod()
+    ├─ [0] VM::startPrank(operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C])
+    │   └─ ← [Return]
+    ├─ [18161] AccountingIndexes::calculateIndexFactor(2, 1000000000000000000 [1e18], 60000 [6e4], 58000 [5.8e4], 8640000 [8.64e6], 6048000 [6.048e6], 1000000000000000000000 [1e21], 0)
+    │   ├─ [4724] AccessControlRegistry::hasRole(0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C]) [staticcall]
+    │   │   └─ ← [Return] true
+    │   └─ ← [Return] 1000000000000000000 [1e18], 1000000000000000000000 [1e21]
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return]
+    ├─ [0] VM::assertApproxEqAbs(1000000000000000000 [1e18], 1034482758000000000 [1.034e18], 10000000000 [1e10]) [staticcall]
+    │   └─ ← [Revert] assertion failed: 1000000000000000000 !~= 1034482758000000000 (max delta: 10000000000, real delta: 34482758000000000)
+    └─ ← [Revert] assertion failed: 1000000000000000000 !~= 1034482758000000000 (max delta: 10000000000, real delta: 34482758000000000)
 
-    birthday = _startOfDay(birthday);
-    timestamp = _startOfDay(timestamp);
+Backtrace:
+  at VM.assertApproxEqAbs
+  at AccountingIndexesTest.test_calculateFullPeriod
 
-    require(timestamp >= birthday, "timestamp < birthday");
+[PASS] test_calculateIndexBusinessDays() (gas: 31662)
+Traces:
+  [31662] AccountingIndexesTest::test_calculateIndexBusinessDays()
+    ├─ [0] VM::startPrank(operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C])
+    │   └─ ← [Return]
+    ├─ [20416] AccountingIndexes::calculateIndexFactor(5, 1000000000000000000 [1e18], 58320 [5.832e4], 58000 [5.8e4], 8640000 [8.64e6], 7776000 [7.776e6], 1000000000000000000 [1e18], 0)
+    │   ├─ [4724] AccessControlRegistry::hasRole(0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C]) [staticcall]
+    │   │   └─ ← [Return] true
+    │   └─ ← [Return] 1001838571605769847 [1.001e18], 1001838571605769847 [1.001e18]
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return]
+    └─ ← [Return]
 
-    // Move birthday forward until it is <= timestamp and in correct cycle
-    while (birthday + 30 days <= timestamp) {
-        birthday += 30 days;
-    }
+[FAIL: log != expected log] test_calculateIndexFactor() (gas: 34545)
+Traces:
+  [1676237] AccountingIndexesTest::setUp()
+    ├─ [0] VM::addr(<pk>) [staticcall]
+    │   └─ ← [Return] operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C]
+    ├─ [0] VM::label(operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C], "operator")
+    │   └─ ← [Return]
+    ├─ [0] VM::addr(<pk>) [staticcall]
+    │   └─ ← [Return] otherAccount: [0x94e68a3298D5b7e19685E8b8A75271094CDd8D95]
+    ├─ [0] VM::label(otherAccount: [0x94e68a3298D5b7e19685E8b8A75271094CDd8D95], "otherAccount")
+    │   └─ ← [Return]
+    ├─ [0] VM::addr(<pk>) [staticcall]
+    │   └─ ← [Return] adminUser: [0x83aeEb524e99f90Fa48955cCFFf9C112A34932C1]
+    ├─ [0] VM::label(adminUser: [0x83aeEb524e99f90Fa48955cCFFf9C112A34932C1], "adminUser")
+    │   └─ ← [Return]
+    ├─ [761000] → new AccessControlRegistry@0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+    │   └─ ← [Return] 3801 bytes of code
+    ├─ [47648] AccessControlRegistry::initialize()
+    │   ├─ emit Initialized(version: 1)
+    │   └─ ← [Stop]
+    ├─ [510867] → new AccountingIndexes@0x2e234DAe75C793f67A35089C9d99245E1C58470b
+    │   └─ ← [Return] 2440 bytes of code
+    ├─ [69682] AccessControlRegistry::grantRole(0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C])
+    │   ├─ emit RoleGranted(role: 0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, account: operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C], sender: AccountingIndexesTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   └─ ← [Stop]
+    ├─ [69682] AccessControlRegistry::grantRole(0xdf8b4c520ffe197c5343c6f5aec59570151ef9a492f2c624fd45ddde6135ec42, adminUser: [0x83aeEb524e99f90Fa48955cCFFf9C112A34932C1])
+    │   ├─ emit RoleGranted(role: 0xdf8b4c520ffe197c5343c6f5aec59570151ef9a492f2c624fd45ddde6135ec42, account: adminUser: [0x83aeEb524e99f90Fa48955cCFFf9C112A34932C1], sender: AccountingIndexesTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   └─ ← [Stop]
+    ├─ [47782] AccessControlRegistry::grantRole(0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, AccountingIndexes: [0x2e234DAe75C793f67A35089C9d99245E1C58470b])
+    │   ├─ emit RoleGranted(role: 0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, account: AccountingIndexes: [0x2e234DAe75C793f67A35089C9d99245E1C58470b], sender: AccountingIndexesTest: [0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496])
+    │   └─ ← [Stop]
+    ├─ [0] VM::warp(8640000 [8.64e6])
+    │   └─ ← [Return]
+    └─ ← [Return]
 
-    lastBirthday = birthday;
-    nextBirthday = birthday + 30 days;
-}
+  [34545] AccountingIndexesTest::test_calculateIndexFactor()
+    ├─ [0] VM::startPrank(operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C])
+    │   └─ ← [Return]
+    ├─ [0] VM::expectEmit(true, true, true, true)
+    │   └─ ← [Return]
+    ├─ emit IndexFactorCalculated(requestId: 10, timestamp: 8640000 [8.64e6], nik: 58320 [5.832e4], nik_1: 58000 [5.8e4], daysNum: 15, daysDen: 30, newCwad: 1002757600000000000 [1.002e18], vna: 1002757600000000000 [1.002e18])
+    ├─ [20694] AccountingIndexes::calculateIndexFactor(10, 1000000000000000000 [1e18], 58320 [5.832e4], 58000 [5.8e4], 8640000 [8.64e6], 7344000 [7.344e6], 1000000000000000000 [1e18], 0)
+    │   ├─ [4724] AccessControlRegistry::hasRole(0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C]) [staticcall]
+    │   │   └─ ← [Return] true
+    │   └─ ← [Return] 1002759124650065459 [1.002e18], 1002759124650065459 [1.002e18]
+    └─ ← [Revert] log != expected log
