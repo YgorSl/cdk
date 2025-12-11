@@ -1,0 +1,169 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Roles} from "../utils/Roles.sol";
+import {IAccessControlRegistry} from "../access/IAccessControlRegistry.sol";
+import {DIOverMath} from "../lib/DIOverMath.sol";
+import {DebentureEnums} from "../lib/DebentureEnums.sol";
+
+contract AccountingIndexes {
+    using DIOverMath for uint256;
+    using DIOverMath for int256;
+
+    uint256 private constant WAD = 1e18;
+    uint256 private constant SECONDS_PER_DAY = 86400;
+
+    IAccessControlRegistry public accessControl;
+    
+    constructor(address _accessControlRegistryAddress) {
+        accessControl = IAccessControlRegistry(_accessControlRegistryAddress);
+    }
+
+    modifier onlyRole(bytes32 _role) {
+        require(
+            _checkRole(_role, msg.sender),
+            "User not allowed to perform this operation!"
+        );
+        _;   
+    }
+
+    function _checkRole(bytes32 role, address account) internal view returns (bool) {
+        return accessControl.hasRole(role, account) || accessControl.hasRole(Roles.ADMIN, account);
+    }
+
+    event IndexFactorCalculated(
+        uint256 requestId,
+        uint256 timestamp,
+        uint256 nik,
+        uint256 nik_1,
+        uint256 daysNum,
+        uint256 daysDen,
+        uint256 newCwad,
+        uint256 vna
+    );
+
+    /// @notice Calcula o fator acumulado C e o novo VNA
+    /// @dev Fórmula: C = Cprev * (NI_k / NI_{k-1})^(daysNum / daysDen)
+    function calculateIndexFactor(
+        uint256 requestId,
+        uint256 previousCwad,
+        uint256 nik,
+        uint256 nik_1,
+        uint256 currentTimestamp,
+        uint256 birthday,
+        uint256 vne,
+        DebentureEnums.DayBasisRemuneration basis
+    )
+        external
+        onlyRole(Roles.OPERATOR)
+        returns (uint256 newCwad, uint256 vna)
+    {
+        require(nik > 0 && nik_1 > 0, "Invalid NI values");
+
+        // 1) Determina aniversário anterior e próximo
+        (uint256 lastBirthday, uint256 nextBirthday) =
+            _getBirthdayRange(birthday, currentTimestamp);
+
+        // 2) Calcula dias (corridos ou úteis)
+        uint256 daysNum;
+        uint256 daysDen;
+
+        if (basis == DebentureEnums.DayBasisRemuneration.DiasUteis252) {
+            daysNum = _businessDaysBetween(lastBirthday, currentTimestamp);
+            daysDen = _businessDaysBetween(lastBirthday, nextBirthday);
+        } else {
+            daysNum = _calendarDaysBetween(lastBirthday, currentTimestamp);
+            daysDen = _calendarDaysBetween(lastBirthday, nextBirthday);
+        }
+
+        require(daysDen > 0, "Invalid denominator");
+
+        // 3) Razão NI_k / NI_{k-1} em WAD
+        int256 ratioWadInt = DIOverMath.divWad(int256(nik), int256(nik_1));
+        require(ratioWadInt > 0, "Ratio invalid");
+        uint256 ratioWad = uint256(ratioWadInt);
+
+        // 4) Aplica expoente fracionário (daysNum/daysDen)
+        uint256 fatorMensal = DIOverMath.powFractionWad(
+            ratioWad,
+            daysNum,
+            daysDen
+        );
+
+        // 5) Novo fator acumulado
+        int256 newCwadInt = DIOverMath.mulWad(int256(previousCwad), int256(fatorMensal));
+        require(newCwadInt > 0, "C invalid");
+        newCwad = uint256(newCwadInt);
+
+        // 6) VNA
+        vna = (vne * newCwad) / WAD;
+
+        emit IndexFactorCalculated(
+            requestId,
+            currentTimestamp,
+            nik,
+            nik_1,
+            daysNum,
+            daysDen,
+            newCwad,
+            vna
+        );
+    }
+
+    // ----------------- HELPERS DE DATA -----------------
+
+    function _startOfDay(uint256 ts) internal pure returns (uint256) {
+        return ts - (ts % SECONDS_PER_DAY);
+    }
+
+    /// @dev Corrigida: não deixa lastBirthday == currentTimestamp quando passou exatamente 1 ciclo
+    function _getBirthdayRange(
+        uint256 birthday,
+        uint256 timestamp
+    ) internal pure returns (uint256 lastBirthday, uint256 nextBirthday) {
+        birthday = _startOfDay(birthday);
+        timestamp = _startOfDay(timestamp);
+
+        require(timestamp >= birthday, "timestamp < birthday");
+
+        // Avança o aniversário base de 30 em 30 dias até cair no ciclo atual
+        while (birthday + 30 days <= timestamp) {
+            birthday += 30 days;
+        }
+
+        lastBirthday = birthday;
+        nextBirthday = birthday + 30 days;
+    }
+
+    function _calendarDaysBetween(
+        uint256 fromDayTs,
+        uint256 toDayTs
+    ) internal pure returns (uint256) {
+        require(toDayTs >= fromDayTs, "Invalid date order");
+        return (toDayTs - fromDayTs) / SECONDS_PER_DAY;
+    }
+
+    function _weekday(uint256 ts) internal pure returns (uint256) {
+        return ((ts / SECONDS_PER_DAY) + 4) % 7;  // 1970-01-01 = quinta (4)
+    }
+
+    function _isWeekend(uint256 ts) internal pure returns (bool) {
+        uint256 w = _weekday(ts);
+        return (w == 0 || w == 6); // domingo (0) ou sábado (6)
+    }    
+
+    function _businessDaysBetween(
+        uint256 fromDayTs,
+        uint256 toDayTs
+    ) internal pure returns (uint256) {
+        require(toDayTs >= fromDayTs, "Invalid date order");
+
+        uint256 count = 0;
+        for (uint256 d = fromDayTs; d < toDayTs; d += SECONDS_PER_DAY) {
+            if (!_isWeekend(d)) {
+                count++;
+            }
+        }
+        return count;
+    }
+}
