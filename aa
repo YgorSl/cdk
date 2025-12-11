@@ -1,0 +1,18 @@
+function _getBirthdayRange(
+    uint256 birthday,
+    uint256 timestamp
+) internal pure returns (uint256 lastBirthday, uint256 nextBirthday) {
+
+    birthday = _startOfDay(birthday);
+    timestamp = _startOfDay(timestamp);
+
+    require(timestamp >= birthday, "timestamp < birthday");
+
+    // Move birthday forward until it is <= timestamp and in correct cycle
+    while (birthday + 30 days <= timestamp) {
+        birthday += 30 days;
+    }
+
+    lastBirthday = birthday;
+    nextBirthday = birthday + 30 days;
+}
