@@ -1,0 +1,216 @@
+  [30038] AccountingIndexesTest::test_calculateFullPeriod()
+    ├─ [0] VM::startPrank(operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C])
+    │   └─ ← [Return]
+    ├─ [18234] AccountingIndexes::calculateIndexFactor(2, 1000000000000000000 [1e18], 60000 [6e4], 58000 [5.8e4], 8640000 [8.64e6], 6048000 [6.048e6], 1000000000000000000000 [1e21], 0)
+    │   ├─ [4724] AccessControlRegistry::hasRole(0x523a704056dcd17bcf83bed8b68c59416dac1119be77755efe3bde0a64e46e0c, operator: [0xbC32b0FCDb9b55F5ECE07BA7F8059bA42D331F4C]) [staticcall]
+    │   │   └─ ← [Return] true
+    │   └─ ← [Return] 1000000000000000000 [1e18], 1000000000000000000000 [1e21]
+    ├─ [0] VM::stopPrank()
+    │   └─ ← [Return]
+    ├─ [0] VM::assertApproxEqAbs(1000000000000000000 [1e18], 1034482758000000000 [1.034e18], 10000000000 [1e10]) [staticcall]
+    │   └─ ← [Revert] assertion failed: 1000000000000000000 !~= 1034482758000000000 (max delta: 10000000000, real delta: 34482758000000000)
+    └─ ← [Revert] assertion failed: 1000000000000000000 !~= 1034482758000000000 (max delta: 10000000000, real delta: 34482758000000000)
+fiz a alteração recomendada e esse teste nao passou segue o codigo do contrato atualizado:
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Roles} from "../utils/Roles.sol";
+import {IAccessControlRegistry} from "../access/IAccessControlRegistry.sol";
+import {DIOverMath} from "../lib/DIOverMath.sol";
+import {DebentureEnums} from "../lib/DebentureEnums.sol";
+
+contract AccountingIndexes {
+    using DIOverMath for uint256;
+    using DIOverMath for int256;
+
+    uint256 private constant WAD = 1e18;
+    uint256 private constant SECONDS_PER_DAY = 86400;
+
+    IAccessControlRegistry public accessControl;
+    
+    constructor(address _accessControlRegistryAddress) {
+        accessControl = IAccessControlRegistry(_accessControlRegistryAddress);
+    }
+
+    modifier onlyRole(bytes32 _role) {
+        address _account = msg.sender;
+        require(
+            _checkRole(_role, msg.sender),
+            "User not allowed to perform this operation!"
+        );
+        _;   
+    }
+
+    /**
+     * @dev Centralized logic to check if an account has a given role or is a global ADMIN.
+     * @param role The bytes32 identifier of the role to check.
+     * @param account The address of the account to check.
+     * @return bool True if the account has the specified role or the ADMIN role.
+     */
+    function _checkRole(bytes32 role, address account) internal view returns (bool) {
+        return accessControl.hasRole(role, account) || accessControl.hasRole(Roles.ADMIN, account);
+    }
+
+    struct DebentureToken {
+        uint256 vne;// passe
+        uint256 vna;//retorno
+        uint256 accumulatedFactor;
+        bool isBusinessDays;
+    }
+
+    struct CalculationPeriod {
+        uint256 indexNumber;
+        uint256 projection;
+        bool useProjection;
+        uint256 proRataDays;
+        uint256 totalDays;
+    }
+
+    struct CalculationRequest {
+        uint256 calculationDate;
+        CalculationPeriod[] periods;
+    }
+
+    // /**
+    //  * @notice Calculates the updated VNA (Net Updated Value) and the accumulated factor for a debenture.
+    //  * @dev Iterates through each calculation period and applies either projected or actual index rates.
+    //  * @param debenture The debenture token containing initial values.
+    //  * @param request The calculation request containing the date and periods.
+    //  * @return updatedVNA The new VNA after applying all factors.
+    //  * @return updatedFactor The final accumulated factor after all periods.
+    //  */
+    // function calculateVNA(
+    //     DebentureToken memory debenture,
+    //     CalculationRequest memory request
+    // ) public pure returns (
+    //     uint256 updatedVNA, uint256 updatedFactor
+    // ) {
+    //     uint256 accumulatedFactor = 1e18;
+
+    //     for (uint256 i = 0; i < request.periods.length; i++) {
+    //         CalculationPeriod memory p = request.periods[i];
+
+    //         uint256 monthlyFactor;
+
+    //         if (p.useProjection) {
+    //             uint256 rateWad = (p.projection * DIOverMath.WAD_TO_2) / 100;
+    //             monthlyFactor = (uint256(DIOverMath.WAD) + rateWad).powFractionWad(p.proRataDays, p.totalDays);
+    //         } else {
+    //             uint256 indexWad = p.indexNumber *  DIOverMath.WAD_TO_8;
+    //             monthlyFactor = indexWad.powFractionWad(p.proRataDays, p.totalDays);
+    //         }
+    //         accumulatedFactor = (accumulatedFactor * monthlyFactor) / uint256(DIOverMath.WAD);
+    //     }
+
+    //     updatedFactor = accumulatedFactor;
+    //     updatedVNA = (debenture.vne * accumulatedFactor) / uint256(DIOverMath.WAD);
+    // }
+
+     /// @notice Calcula o fator acumulado C e o novo VNA
+    /// @dev Fórmula: C = Cprev * (NI_k / NI_{k-1})^(daysNum / daysDen)
+    /// @param requestId id lógico da operação (não usado aqui, apenas p/ tracking)
+    /// @param previousCwad fator acumulado anterior (1e18 = 1.0)
+    /// @param nik número-índice do mês atual (NI_k)
+    /// @param nik_1 número-índice do mês anterior (NI_{k-1})
+    /// @param currentTimestamp dcp ou dup (dias decorridos)
+    /// @param birthday dct ou dut (total de dias no ciclo)
+    /// @param vne valor nominal base
+    /// @param basis valor nominal base
+    function calculateIndexFactor(
+        uint256 requestId,
+        uint256 previousCwad,
+        uint256 nik,
+        uint256 nik_1,
+        uint256 currentTimestamp,
+        uint256 birthday,
+        uint256 vne,
+        DebentureEnums.DayBasisRemuneration basis
+    ) external onlyRole(Roles.OPERATOR)  returns (uint256 newCwad, uint256 vna) {
+        require(nik > 0 && nik_1 > 0, "Invalid NI values");
+
+        (uint256 lastBirthday, uint256 nextBirthday) =
+            _getBirthdayRange(birthday, currentTimestamp);
+
+        uint256 daysNum;
+        uint256 daysDen;
+
+        if (basis == DebentureEnums.DayBasisRemuneration.DiasUteis252) {
+            daysNum = _businessDaysBetween(lastBirthday, currentTimestamp);
+            daysDen = _businessDaysBetween(lastBirthday, nextBirthday);
+        } else {
+            daysNum = _calendarDaysBetween(lastBirthday, currentTimestamp);
+            daysDen = _calendarDaysBetween(lastBirthday, nextBirthday);
+        }
+
+        require(daysDen > 0, "Invalid denominator");
+
+        int256 ratioWad = DIOverMath.divWad(int256(nik), int256(nik_1));
+        require(ratioWad > 0, "Ratio invalid");
+
+        uint256 fatorMensal = DIOverMath.powFractionWad(
+            uint256(ratioWad),
+            daysNum,
+            daysDen
+        );
+
+        int256 newCwadInt = DIOverMath.mulWad(int256(previousCwad), int256(fatorMensal));
+        newCwad = uint256(newCwadInt);
+
+        vna = (vne * newCwad) / WAD;
+    }
+
+    function _startOfDay(uint256 ts) internal pure returns (uint256) {
+        return ts - (ts % SECONDS_PER_DAY);
+    }
+
+    function _getBirthdayRange(
+        uint256 birthday,
+        uint256 timestamp
+    ) internal pure returns (uint256 lastBirthday, uint256 nextBirthday) {
+        uint256 base = _startOfDay(birthday);
+        uint256 today = _startOfDay(timestamp);
+
+        if (today <= base) {
+            lastBirthday = base;
+            nextBirthday = base + 30 days; 
+            return (lastBirthday, nextBirthday);
+        }
+
+        uint256 cycles = (today - base) / 30 days;
+        lastBirthday = base + cycles * 30 days;
+        nextBirthday = lastBirthday + 30 days;
+    }
+
+    function _calendarDaysBetween(
+        uint256 fromDayTs,
+        uint256 toDayTs
+    ) internal pure returns (uint256) {
+        require(toDayTs >= fromDayTs, "Invalid date order");
+        return (toDayTs - fromDayTs) / SECONDS_PER_DAY;
+    }
+
+    function _weekday(uint256 ts) internal pure returns (uint256) {
+        return ((ts / SECONDS_PER_DAY) + 4) % 7;  // 1970-01-01 foi quinta (4)
+    }
+
+    function _isWeekend(uint256 ts) internal pure returns (bool) {
+        uint256 w = _weekday(ts);
+        return (w == 0 || w == 6);
+    }    
+
+    function _businessDaysBetween(
+        uint256 fromDayTs,
+        uint256 toDayTs
+    ) internal pure returns (uint256) {
+        require(toDayTs >= fromDayTs, "Invalid date order");
+
+        uint256 count = 0;
+        for (uint256 d = fromDayTs; d < toDayTs; d += SECONDS_PER_DAY) {
+            if (!_isWeekend(d)) {
+                count++;
+            }
+        }
+        return count;
+    }
+}
